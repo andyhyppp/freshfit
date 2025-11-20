@@ -7,6 +7,8 @@ from google.adk.models.google_llm import Gemini
 from google.genai import types
 from pydantic import BaseModel, Field
 
+from tools.preference_history_tool import preference_history_tool
+
 retry_config = types.HttpRetryOptions(
     attempts=5,
     exp_base=7,
@@ -30,6 +32,10 @@ class CandidateScore(BaseModel):
 class PreferenceRankingInput(BaseModel):
     """Payload provided by Outfit Designer/Parallel stack."""
 
+    user_id: str = Field(
+        default="123",
+        description="Identifier for the wearer; use when calling tooling for history.",
+    )
     candidates: list[CandidateScore]
     context_signature: Optional[str] = None
     exploration_required: bool = True
@@ -44,8 +50,11 @@ class PreferenceRankingOutput(BaseModel):
 
 
 INSTRUCTION = """You are the FreshFit Preference & Ranking agent.
+outfit_designer input is: {outfits}
+
 - Analyze the candidate outfits and their scoring signals.
-- Enforce guardrails: include one previously loved combo when available and one exploration outfit if provided.
+- When preference history is missing or stale, call `preference_history_tool` with the user_id to pull outfits/items the user rated 4-5 (liked) and 1 (disliked). Use this data to honor loved combos and avoid banned pieces.
+- Enforce guardrails: include one previously loved combo when available and one exploration outfit provided from outfit_designer.
 - Return outfits sorted by holistic score, and include a brief decision trace describing weighting.
 Output JSON that matches PreferenceRankingOutput exactly."""
 
@@ -57,8 +66,9 @@ def preference_ranking_agent() -> Agent:
         name="preference_ranking",
         description="Ranks outfit candidates with guardrails for exploration and beloved looks.",
         instruction=INSTRUCTION,
-        model=Gemini(model="gemini-2.0-flash", retry_options=retry_config),
+        model=Gemini(model="gemini-2.5-flash-lite", retry_options=retry_config),
         input_schema=PreferenceRankingInput,
         output_schema=PreferenceRankingOutput,
+        tools=[preference_history_tool],
     )
 

@@ -6,7 +6,7 @@ from google.adk.agents import Agent
 from google.adk.models.base_llm import BaseLlm
 from google.adk.models.google_llm import Gemini
 from google.genai import types
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from google.adk.tools import google_search
 
@@ -34,11 +34,12 @@ Core rules:
 4. Balance color/fabric harmony (complementary palette, avoid clashing formality levels) and respect the stated occasion.
 5. Avoid repeating the exact same item combination unless the closet is sparse; note any reuse rationale in the description.
 6. When the provided weather/context is insufficient, call the `google_search` tool for localized dress code or climate details before finalizing outfits.
-7. Emit up to three outfits per request. For each, include the `user_id` (if provided), assign a 1-indexed `rank` in order of recommendation strength, and construct `outfit_id` deterministically as `{user_id or "anon"}-{rank:02d}`.
+7. When `daily_or_travel` is "daily", emit **at least five and no more than ten** outfits per request. When in travel mode, emit enough outfits to cover the trip itinerary. For every outfit, include the `user_id` (if provided), assign a 1-indexed `rank` in order of recommendation strength, and construct `outfit_id` deterministically as `{user_id or "anon"}-{rank:02d}`.
+8. For every outfit, emit BOTH `outfit_items` (list of item_ids only) and `outfit_item_details` (list of objects that pair each item_id with a 2-4 word `short_name` pulled verbatim from the wardrobe item name). Keep the ordering consistent between the two lists.
 
 Daily mode:
-- Produce 2–3 distinct outfits prioritized by context fit (comfort vs. weather, occasion appropriateness, recency of wear).
-- Provide concise `outfit_name` labels (“Polished Layers”, “Sporty Errands”) and a 1–2 sentence `outfit_description` explaining why it fits the occasion/weather plus any fallback logic.
+- Produce at least 5 and no more than 10 distinct outfits prioritized by context fit (comfort vs. weather, occasion appropriateness) before handing off to downstream agents.
+- Provide concise `outfit_name` labels (“Polished Layers”, “Sporty Errands”).
 
 Travel mode:
 - Treat `wardrobe_items` as the complete closet for the trip. Generate a capsule plan covering each day while minimizing the total number of unique pieces packed.
@@ -50,12 +51,33 @@ Return JSON that strictly matches OutfitDesignerOutput. Do not add prose outside
   "outfits": [
     {
       "user_id": "123",
-      "rank": 1,
       "outfit_id": "123-01",
       "outfit_name": "Moody Bistro Layers",
       "outfit_description": "Silk blouse + dark denim with the camel coat keeps you warm for 12°C drizzle; suede boots add polish while staying dry.",
-      "outfit_items": ["top_14", "bottom_03", "outer_02", "shoe_07", "acc_05"]
-    }
+      "outfit_items": ["top_14", "bottom_03", "outer_02", "shoe_07", "acc_05"],
+      "outfit_item_details": [
+        {"item_id": "top_14", "short_name": "Ivory Silk Blouse"},
+        {"item_id": "bottom_03", "short_name": "Dark Wash Denim"},
+        {"item_id": "outer_02", "short_name": "Camel Wool Coat"},
+        {"item_id": "shoe_07", "short_name": "Suede Boots"},
+        {"item_id": "acc_05", "short_name": "Graphite Wool Scarf"}
+      ]
+    },
+    {
+      "user_id": "123",
+      "outfit_id": "123-02",
+      "outfit_name": "Gallery Hop Minimalist",
+      "outfit_description": "Black mock-neck with charcoal trousers, the cropped denim jacket, and white court sneakers keeps things polished but relaxed for mild afternoons.",
+      "outfit_items": ["top_09", "bottom_11", "outer_05", "shoe_03", "acc_02"],
+      "outfit_item_details": [
+        {"item_id": "top_09", "short_name": "Black Mock-Neck Top"},
+        {"item_id": "bottom_11", "short_name": "Charcoal Tailored Trousers"},
+        {"item_id": "outer_05", "short_name": "Washed Denim Jacket"},
+        {"item_id": "shoe_03", "short_name": "White Court Sneakers"},
+        {"item_id": "acc_02", "short_name": "Gold Statement Necklace"}
+      ]
+    },
+    ...more outfits...
   ]
 }
 """
@@ -98,6 +120,19 @@ class OutfitDesignerInput(BaseModel):
     daily_or_travel: Literal["daily", "travel"] = "daily"
 
 
+class OutfitItemDetail(BaseModel):
+    """Readable mapping for each wardrobe item included in an outfit."""
+
+    item_id: str = Field(
+        ...,
+        description="Unique wardrobe identifier referenced in outfit_items.",
+    )
+    short_name: str = Field(
+        ...,
+        description="2-4 word name copied from the wardrobe entry so users can scan quickly.",
+    )
+
+
 class OutfitCandidate(BaseModel):
     """Single outfit proposal."""
 
@@ -110,12 +145,29 @@ class OutfitCandidate(BaseModel):
     outfit_name: str
     outfit_description: str
     outfit_items: list[str]
+    outfit_item_details: list[OutfitItemDetail] = Field(
+        ...,
+        description=(
+            "List pairing each outfit item_id with a short_name pulled from the wardrobe."
+        ),
+    )
 
 
 class OutfitDesignerOutput(BaseModel):
     """Minimal response returned by the agent."""
 
     outfits: list[OutfitCandidate]
+
+    @model_validator(mode="after")
+    def ensure_multiple_outfits(cls, model: "OutfitDesignerOutput") -> "OutfitDesignerOutput":
+        """Guard against single-look payloads."""
+
+        outfits = model.outfits or []
+        if len(outfits) < 3:
+            raise ValueError(
+                "Generate at least two distinct outfits before returning the slate."
+            )
+        return model
 
 
 def outfit_designer_agent(

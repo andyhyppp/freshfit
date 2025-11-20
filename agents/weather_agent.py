@@ -11,6 +11,8 @@ from google.adk.tools.google_search_agent_tool import (
 from google.genai import types
 from pydantic import BaseModel, Field, field_validator
 
+from tools.date_tool import date_tool
+
 
 TEMP_BUCKETS = ("cold", "cool", "mild", "warm", "hot")
 
@@ -33,7 +35,13 @@ class WeatherAgentInput(BaseModel):
     """Structured inputs coming from the Orchestrator."""
 
     location: str = Field(..., description="City or geo lookup for weather APIs.")
-    date: str = Field(..., description="ISO date for the requested day.")
+    date: Optional[str] = Field(
+        default=None,
+        description=(
+            "ISO date for the requested day. If omitted or if the user referenced "
+            "'today', call the date tool to resolve the current date."
+        ),
+    )
     occasion_tag: str = Field(..., description="User-provided or calendar tag.")
     dress_code: Optional[str] = None
 
@@ -60,13 +68,14 @@ class WeatherAgentOutput(BaseModel):
 
 INSTRUCTION = """You are the FreshFit Weather agent that feeds the daily intake flow.
 
-Input payload:
+- Input payload:
 - location: user city or geo lookup
-- date: ISO date (local to the user)
+- date: ISO date (local to the user). If the user only said "today" or "next week" (or the field is blank), call the `date_tool` (which always returns Pacific Time) to resolve the current date before querying weather sources.
 - occasion_tag & optional dress_code hints
 
 Task:
-1. Use the google_search tool to fetch weather for the exact location/date in Celsius (average, high, low, precipitation chance). Prefer day-level summaries; if nothing is available, state that you reused the closest recent data.
+1. When date is missing or represents "today", call `date_tool` (Pacific Time) and log the returned date/assumption before continuing.
+2. Use the google_search tool to fetch weather for the exact location/date in Celsius (average, high, low, precipitation chance). Prefer day-level summaries; if nothing is available, state that you reused the closest recent data.
 2. Map the average temperature into the required bucket:
    cold <10°C, cool 10-18°C, mild 18-24°C, warm 24-30°C, hot >30°C.
 3. Populate precipitation_chance as a float between 0 and 1 (e.g., 40% → 0.4). If precipitation data is missing, output null.
@@ -100,6 +109,6 @@ def weather_agent() -> Agent:
         # input_schema=WeatherAgentInput,
         model=Gemini(model="gemini-2.5-flash", retry_options=retry_config),
         output_key="weather",
-        tools=[search_tool],
+        tools=[search_tool, date_tool],
     )
 
