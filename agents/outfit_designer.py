@@ -180,16 +180,17 @@ def outfit_designer_agent(
     """Return ADK agent that drafts outfit ideas."""
 
     resolved_model = model or Gemini(
-        model="gemini-2.5-flash-lite",
+        model="gemini-2.5-flash",
         retry_options=retry_config,
     )
 
     return Agent(
         name="outfit_designer",
         description="Suggests outfits from a wardrobe summary.",
-        instruction=instruction or INSTRUCTION,
+        instruction=INSTRUCTION,
         model=resolved_model,
         input_schema=OutfitDesignerInput,
         output_schema=OutfitDesignerOutput,
         output_key="outfits",
+        tools=[google_search],
     )

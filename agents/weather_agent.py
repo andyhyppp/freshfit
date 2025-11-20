@@ -4,10 +4,8 @@ from typing import Literal, Optional
 
 from google.adk.agents import Agent
 from google.adk.models.google_llm import Gemini
-from google.adk.tools.google_search_agent_tool import (
-    GoogleSearchAgentTool,
-    create_google_search_agent,
-)
+from google.adk.tools import google_search
+
 from google.genai import types
 from pydantic import BaseModel, Field, field_validator
 
@@ -97,11 +95,6 @@ Output:
 
 def weather_agent() -> Agent:
     """Construct the FreshFit Weather agent."""
-
-    # Wrap the built-in Google Search tool so it can be used alongside AFC.
-    search_agent = create_google_search_agent(model="gemini-2.5-flash")
-    search_tool = GoogleSearchAgentTool(search_agent)
-
     return Agent(
         name="weather_agent",
         description="Collects weather and occasion metadata for FreshFit.",
@@ -109,5 +102,5 @@ def weather_agent() -> Agent:
         # input_schema=WeatherAgentInput,
         model=Gemini(model="gemini-2.5-flash", retry_options=retry_config),
         output_key="weather",
-        tools=[search_tool, date_tool],
+        tools=[google_search, date_tool],
     )

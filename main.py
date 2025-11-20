@@ -1,20 +1,18 @@
 import asyncio
 import json
+import textwrap
 from typing import Any, Optional
 
 from dotenv import load_dotenv
-from google.adk.agents import ParallelAgent, SequentialAgent
-from google.adk.memory import InMemoryMemoryService
 from google.adk.runners import Runner
+from google.adk.memory import InMemoryMemoryService
 from google.adk.sessions import InMemorySessionService
 from google.genai import types
 
 from agents.feedback_learning import feedback_learning_agent
 from agents.outfit_designer import outfit_designer_agent
-from agents.preference_ranking import preference_ranking_agent
-from agents.weather_agent import weather_agent
-from agents.wardrobe_cataloger import wardrobe_cataloger_agent
 from agents.explanation_agent import explanation_agent
+from agents.router_agent import create_freshfit_router
 
 load_dotenv()
 
@@ -22,49 +20,11 @@ load_dotenv()
 APP_NAME = "FreshFit"
 USER_ID = "123"  # for demo purposes, just use a random id
 
-
-class FreshFitRootAgent(SequentialAgent):
-    """Thin subclass so ADK infers the correct app origin."""
-
-
-weather_agent_instance = weather_agent()
-wardrobe_agent = wardrobe_cataloger_agent()
-outfit_agent = outfit_designer_agent()
-explanation_agent_instance = explanation_agent()
+# Initialize agents
+root_agent = create_freshfit_router()
 feedback_agent = feedback_learning_agent()
-ranking_agent = preference_ranking_agent()
-
-parallel_agent = ParallelAgent(
-    name="ParallelAgents",
-    description="Runs the weather agent and wardrobe cataloger in parallel.",
-    sub_agents=[
-        weather_agent_instance,
-        wardrobe_agent,
-    ],
-)
-
-sequential_agent = SequentialAgent(
-    name="SequentialAgents",
-    description=(
-        "A sequential agent that combines the outputs of the outfit designer and "
-        "explanation agent. Feedback is handled interactively via the CLI."
-    ),
-    sub_agents=[
-        outfit_agent,
-        ranking_agent,
-        explanation_agent_instance,
-    ],
-)
-
-
-root_agent = FreshFitRootAgent(
-    name=APP_NAME,
-    sub_agents=[
-        parallel_agent,
-        sequential_agent,
-    ],
-)
-
+outfit_agent_instance = outfit_designer_agent()
+explanation_agent_instance = explanation_agent()
 
 memory_service = InMemoryMemoryService()
 session_service = InMemorySessionService()
@@ -135,6 +95,18 @@ def _prompt_index_choice(
         )
 
 
+def record_feedback_events(
+    user_id: str, events: list[dict[str, Any]], outfit_lookup: dict[str, Any]
+) -> None:
+    """Log feedback events to the database (Stub)."""
+    # In a real app, this would write to the DB using the schema in tools/preference_history_tool.py
+    print(f"\n[System] Recording {len(events)} feedback events for user {user_id}...")
+    # Example of what might happen:
+    # for event in events:
+    #     outfit = outfit_lookup.get(event["outfit_id"])
+    #     db.insert("outfit_feedback", ...)
+
+
 async def run_agent_turn(
     runner: Runner,
     *,
@@ -168,7 +140,8 @@ async def run_agent_turn(
         final_response = event_text
 
         # Capture the explanation agent payload so we can always show the slate.
-        if getattr(event, "author", None) == outfit_agent.name:
+        # We check against the names of the agents we care about.
+        if getattr(event, "author", None) == outfit_agent_instance.name:
             outfit_snapshot = event_text
         if getattr(event, "author", None) == explanation_agent_instance.name:
             explanation_snapshot = event_text
@@ -274,11 +247,26 @@ async def main() -> None:
         session_id=feedback_session_id,
     )
 
-    print(
-        "FreshFit CLI\n"
-        "- Ask for outfit ideas, then respond with the requested selection/ratings.\n"
-        "- Type 'exit' or 'quit' to stop."
+    banner_art = textwrap.dedent(
+        """
+          ______              _       ______ _ _
+         |  ____|            | |     |  ____(_) |
+         | |__ _ __ ___  ___ | |__   | |__   _| |_
+         |  __| '__/ _ \\/ __|| '_ \\  |  __| | | __|
+         | |  | | |  __/\\__ \\| | | | | |    | | |_
+         |_|  |_|  \\___||___/|_| |_| |_|    |_|\\__|
+        """
+    ).rstrip()
+
+    tagline = "Smart Wardrobe Assistant".center(58)
+    instructions = "\n".join(
+        [
+            "- Ask for outfit ideas, then respond with the requested selection/ratings.",
+            "- Type 'exit' or 'quit' to stop.",
+        ]
     )
+
+    print(f"{banner_art}\n\n{tagline}\n\n{instructions}")
 
     while True:
         user_text = input("\nYou: ").strip()
@@ -297,6 +285,9 @@ async def main() -> None:
         outfits, outfit_lookup = _parse_outfit_payload(outfit_snapshot)
 
         if response is None:
+            continue
+
+        if not outfits:
             continue
 
         # Collect structured feedback and send it to the Feedback & Learning agent.

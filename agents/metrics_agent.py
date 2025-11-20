@@ -46,7 +46,7 @@ def metrics_agent() -> Agent:
         name="metrics_agent",
         description="Produces KPI snapshots for FreshFit.",
         instruction=INSTRUCTION,
-        model=Gemini(model="gemini-2.5-flash-lite", retry_options=retry_config),
+        model=Gemini(model="gemini-2.5-flash", retry_options=retry_config),
         input_schema=MetricsRequest,
         output_schema=MetricsResponse,
     )

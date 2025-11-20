@@ -127,7 +127,7 @@ def feedback_learning_agent() -> Agent:
         name="feedback_learning",
         description="Processes user feedback, ratings, and 'never again' directives.",
         instruction=INSTRUCTION,
-        model=Gemini(model="gemini-2.5-flash-lite", retry_options=retry_config),
+        model=Gemini(model="gemini-2.5-flash", retry_options=retry_config),
         input_schema=FeedbackLearningInput,
         output_schema=FeedbackLearningOutput,
     )
