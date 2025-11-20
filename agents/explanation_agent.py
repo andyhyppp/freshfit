@@ -68,7 +68,7 @@ def explanation_agent() -> Agent:
         name="explanation_agent",
         description="Generates concise rationales for each outfit option.",
         instruction=INSTRUCTION,
-        model=Gemini(model="gemini-2.5-flash-lite", retry_options=retry_config),
+        model=Gemini(model="gemini-2.5-flash", retry_options=retry_config),
         input_schema=ExplanationAgentInput,
         output_schema=ExplanationAgentOutput,
         output_key="explanations",

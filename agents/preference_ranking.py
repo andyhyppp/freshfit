@@ -66,7 +66,7 @@ def preference_ranking_agent() -> Agent:
         name="preference_ranking",
         description="Ranks outfit candidates with guardrails for exploration and beloved looks.",
         instruction=INSTRUCTION,
-        model=Gemini(model="gemini-2.5-flash-lite", retry_options=retry_config),
+        model=Gemini(model="gemini-2.5-flash", retry_options=retry_config),
         input_schema=PreferenceRankingInput,
         output_schema=PreferenceRankingOutput,
         tools=[preference_history_tool],
