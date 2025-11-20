@@ -166,7 +166,9 @@ def fetch_preference_history(
     return {
         "user_id": user_id,
         "liked_outfits": [_serialize_outfit_row(row) for row in liked_outfit_rows],
-        "disliked_outfits": [_serialize_outfit_row(row) for row in disliked_outfit_rows],
+        "disliked_outfits": [
+            _serialize_outfit_row(row) for row in disliked_outfit_rows
+        ],
         "liked_items": [_serialize_item_row(row) for row in liked_item_rows],
         "disliked_items": [_serialize_item_row(row) for row in disliked_item_rows],
         "metadata": {
@@ -178,5 +180,3 @@ def fetch_preference_history(
 
 
 preference_history_tool = FunctionTool(fetch_preference_history)
-
-

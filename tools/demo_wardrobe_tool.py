@@ -84,4 +84,3 @@ def fetch_demo_wardrobe_items(
 
 
 demo_wardrobe_tool = FunctionTool(fetch_demo_wardrobe_items)
-

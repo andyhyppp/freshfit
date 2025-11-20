@@ -23,4 +23,3 @@ def get_current_date(_: Optional[str] = None) -> dict[str, str]:
 
 
 date_tool = FunctionTool(get_current_date)
-

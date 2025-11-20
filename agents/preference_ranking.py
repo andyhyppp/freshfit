@@ -71,4 +71,3 @@ def preference_ranking_agent() -> Agent:
         output_schema=PreferenceRankingOutput,
         tools=[preference_history_tool],
     )
-

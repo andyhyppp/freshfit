@@ -15,15 +15,12 @@ from agents.preference_ranking import preference_ranking_agent
 from agents.weather_agent import weather_agent
 from agents.wardrobe_cataloger import wardrobe_cataloger_agent
 from agents.explanation_agent import explanation_agent
-from storage.preference_store import record_feedback_events
 
 load_dotenv()
 
 
-APP_NAME = "FreshFitAgents"
-USER_ID = "123"
-
-
+APP_NAME = "FreshFit"
+USER_ID = "123"  # for demo purposes, just use a random id
 
 
 class FreshFitRootAgent(SequentialAgent):
@@ -133,7 +130,9 @@ def _prompt_index_choice(
             value = int(raw)
             if 1 <= value <= max_index:
                 return value
-        print(f"Please enter a number between 1 and {max_index}, or press Enter to skip.")
+        print(
+            f"Please enter a number between 1 and {max_index}, or press Enter to skip."
+        )
 
 
 async def run_agent_turn(
@@ -208,9 +207,10 @@ async def collect_feedback_from_user(
             else "skip"
         )
     else:
-        selected_outfit = input(
-            "\nEnter the outfit_id you want to wear (or type 'skip'): "
-        ).strip() or "skip"
+        selected_outfit = (
+            input("\nEnter the outfit_id you want to wear (or type 'skip'): ").strip()
+            or "skip"
+        )
 
     ratings: list[dict[str, str]] = []
     print(
@@ -305,9 +305,7 @@ async def main() -> None:
             outfits,
         )
         if not ratings and selection.lower() == "skip":
-            print(
-                "No selection or ratings captured; skipping the feedback agent call."
-            )
+            print("No selection or ratings captured; skipping the feedback agent call.")
             continue
 
         feedback_events: list[dict[str, object]] = []
@@ -315,9 +313,7 @@ async def main() -> None:
         for rating_entry in ratings:
             try:
                 rating_value = (
-                    int(rating_entry["rating"])
-                    if rating_entry["rating"]
-                    else None
+                    int(rating_entry["rating"]) if rating_entry["rating"] else None
                 )
             except ValueError:
                 rating_value = None

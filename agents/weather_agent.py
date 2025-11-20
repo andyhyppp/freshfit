@@ -23,6 +23,7 @@ retry_config = types.HttpRetryOptions(
     http_status_codes=[429, 500, 503, 504],
 )
 
+
 class WeatherRequest(BaseModel):
     """Minimal weather query payload passed to tools."""
 
@@ -63,7 +64,6 @@ class WeatherAgentOutput(BaseModel):
         if bucket not in TEMP_BUCKETS:
             raise ValueError(f"temp_bucket must be one of {TEMP_BUCKETS}")
         return bucket
-
 
 
 INSTRUCTION = """You are the FreshFit Weather agent that feeds the daily intake flow.
@@ -111,4 +111,3 @@ def weather_agent() -> Agent:
         output_key="weather",
         tools=[search_tool, date_tool],
     )
-

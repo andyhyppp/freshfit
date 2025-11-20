@@ -159,7 +159,9 @@ class OutfitDesignerOutput(BaseModel):
     outfits: list[OutfitCandidate]
 
     @model_validator(mode="after")
-    def ensure_multiple_outfits(cls, model: "OutfitDesignerOutput") -> "OutfitDesignerOutput":
+    def ensure_multiple_outfits(
+        cls, model: "OutfitDesignerOutput"
+    ) -> "OutfitDesignerOutput":
         """Guard against single-look payloads."""
 
         outfits = model.outfits or []
@@ -189,5 +191,5 @@ def outfit_designer_agent(
         model=resolved_model,
         input_schema=OutfitDesignerInput,
         output_schema=OutfitDesignerOutput,
-        output_key='outfits'
+        output_key="outfits",
     )

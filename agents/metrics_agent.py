@@ -50,4 +50,3 @@ def metrics_agent() -> Agent:
         input_schema=MetricsRequest,
         output_schema=MetricsResponse,
     )
-

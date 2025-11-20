@@ -183,7 +183,9 @@ def seed_preferences() -> None:
                 ],
             )
 
-        outfit_count = conn.execute("SELECT COUNT(*) FROM outfit_feedback").fetchone()[0]
+        outfit_count = conn.execute("SELECT COUNT(*) FROM outfit_feedback").fetchone()[
+            0
+        ]
         item_count = conn.execute("SELECT COUNT(*) FROM item_feedback").fetchone()[0]
 
     print(

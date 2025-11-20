@@ -102,7 +102,6 @@ def wardrobe_cataloger_agent() -> Agent:
         model=Gemini(model="gemini-2.5-flash", retry_options=retry_config),
         input_schema=WardrobeCatalogerInput,
         output_schema=WardrobeCatalogerOutput,
-        output_key='wardrobe_items',
+        output_key="wardrobe_items",
         tools=[demo_wardrobe_tool],
     )
-

@@ -23,9 +23,7 @@ class FeedbackEvent(BaseModel):
     rating: Optional[int] = Field(default=None, ge=1, le=5)
     tags: list[str] = Field(default_factory=list)
     notes: Optional[str] = None
-    future_intent: Literal[
-        "try_again", "maybe_later", "do_not_recommend"
-    ] = Field(
+    future_intent: Literal["try_again", "maybe_later", "do_not_recommend"] = Field(
         default="maybe_later",
         description=(
             "Signals whether the user wants to see this outfit (or a variant) again, "
@@ -133,4 +131,3 @@ def feedback_learning_agent() -> Agent:
         input_schema=FeedbackLearningInput,
         output_schema=FeedbackLearningOutput,
     )
-

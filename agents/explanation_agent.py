@@ -73,4 +73,3 @@ def explanation_agent() -> Agent:
         output_schema=ExplanationAgentOutput,
         output_key="explanations",
     )
-

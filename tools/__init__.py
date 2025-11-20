@@ -1,2 +1,1 @@
 """Custom FreshFit tools package."""
-
