@@ -1,0 +1,60 @@
+name: Bug Report
+description: File a bug report to help us improve FreshFit
+title: "[Bug] <short summary>"
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. Please provide as much detail as possible so we can reproduce and solve the issue quickly.
+  - type: input
+    id: summary
+    attributes:
+      label: Summary
+      description: Briefly describe the unexpected behavior.
+      placeholder: e.g. Wardrobe cataloger crashes for jackets without season tags
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: Provide a clear, numbered list of steps.
+      placeholder: |
+        1. Go to ...
+        2. Run ...
+        3. See error ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: Describe what you expected to happen.
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior / Logs
+      description: Paste the actual output, stack trace, or logs.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: FreshFit Version / Commit
+      description: Include `git describe --tags` or the commit SHA if available.
+  - type: textarea
+    id: env
+    attributes:
+      label: Environment
+      description: OS, Python version, and any relevant hardware details.
+      placeholder: macOS 15.2, Python 3.11.6, Apple M2
+  - type: textarea
+    id: notes
+    attributes:
+      label: Additional Context
+      description: Links, screenshots, or any other helpful information.
+

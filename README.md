@@ -1,69 +1,137 @@
 # FreshFit: Personal Outfit & Wardrobe Copilot
 
-FreshFit is a multi-agent CLI assistant built on Google's Agent Developer Kit (ADK). It orchestrates specialized AI agents to help you manage your closet and plan outfits based on real-time weather, occasion, and your personal style history.
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Python: 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](#quickstart)
+[![CI](https://img.shields.io/github/actions/workflow/status/yourusername/freshfit/ci.yml?branch=main&label=CI)](https://github.com/yourusername/freshfit/actions)
+
+> **TL;DR**: FreshFit is a Gemini-powered CLI copilot that routes between styling advice (OutfitFlow) and wardrobe CRUD (Cloth Registrar) while pulling live weather, honoring rotation rules, and explaining every recommendation.
+
+## Demo
+
+![FreshFit CLI demo](docs/assets/demo-cli.png)
+<sub>*Left: OutfitFlow recommendation. Right: cloth registrar CRUD session.*</sub>
+
+## Quickstart
+
+```bash
+git clone https://github.com/yourusername/freshfit.git
+cd freshfit
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env  # add GOOGLE_API_KEY
+python main.py
+```
+
+## Development Setup
+
+Install the Git hooks so formatting, linting, and secret scans run before every commit:
+
+```bash
+pip install pre-commit
+pre-commit install
+pre-commit run --all-files  # optional, to validate the repo immediately
+```
+
+The hook set enforces Black, Ruff (lint + format), isort, and detect-secrets.
 
 ## 🚀 Features
 
-### **1. Intelligent Outfit Planning**
-- **Context-Aware**: Checks the weather (via Google Search) and your specified occasion (e.g., "date night", "hiking").
-- **Wardrobe Rotation**: Prioritizes items you haven't worn recently.
-- **Smart Ranking**: Scores outfits based on color harmony, weather suitability, and your past ratings.
-- **Explanations**: Tells you *why* a look works ("The wool coat balances the 12°C chill...").
+### Intelligent Outfit Planning
+- **Context-aware**: Retrieves live weather + occasion cues via Google Search.
+- **Wardrobe rotation**: Surfaces unworn pieces before recent repeats.
+- **Smart ranking**: Optimizes for color harmony, warmth, and your history.
+- **Explainability**: Justifies each outfit (“The wool coat blocks the 12 °C wind...”).
 
-### **2. Wardrobe Management**
-- **Natural Language Controls**: "Add this white linen shirt" or "Delete those old ripped jeans."
-- **Automatic Tagging**: Infers category, warmth, and formality from your descriptions.
+### Wardrobe Management
+- **Natural commands**: “Add this white linen shirt” or “Delete the scuffed boots.”
+- **Image + text ingestion**: Extracts metadata even if you only upload a photo.
+- **Validation**: Enforces controlled vocab for category, warmth, formality, and body zone.
 
-### **3. Feedback Loop**
-- **Learning**: Rates outfits (1-5 stars) to refine future suggestions.
-- **History**: Tracks what you wore to prevent repetition.
+### Feedback & Learning
+- **Rating loop**: 1–5 star scores teach the ranking agent your taste.
+- **Wear history**: Logs dates to avoid recommending the same look twice in a row.
 
-## 🛠️ Installation & Usage
+## Usage Examples
 
-1. **Prerequisites**:
-   - Python 3.10+
-   - Google Cloud Project with Gemini API enabled
+### OutfitFlow styling request
+```text
+> Need something smart-casual for San Francisco tomorrow. Chance of rain?
+✔ Weather agent: 58 °F, showers expected.
+✔ Wardrobe cataloger: 6 candidates found.
+→ OutfitFlow:
+  1. Navy merino sweater, charcoal chinos, waterproof Chelsea boots.
+  Why it works: Merino keeps you warm without overheating, boots handle the rain, palette stays office-friendly.
+```
+Tips:
+- Mention **location/date** or “what’s the weather” and the agent will fetch conditions.
+- Add **occasion keywords** (e.g., “gallery opening”) to bias the designer toward formality.
+- Finish with “rate that outfit 3 stars” to feed the feedback learner.
 
-2. **Setup**:
-   ```bash
-   # Clone the repo
-   git clone https://github.com/yourusername/freshfit.git
-   cd freshfit
+### Cloth Registrar CRUD
+```text
+> Add this charcoal wool blazer (image upload)
+Analyzer: detected outerwear / heavy / smart_casual
+✔ Added item #92 “Charcoal Wool Blazer”
 
-   # Install dependencies
-   pip install -r requirements.txt
+> Remove the red trail runners
+Fetch: found 2 matches — “Red Trail Runner (ID 12)” and “Scarlet Runner (ID 37)”
+User: delete ID 12
+✔ Deleted item #12
+```
+Tips:
+- Provide **photos or rich descriptions**; unspecified fields are inferred.
+- When deleting by description, the registrar confirms matches before removal.
 
-   # Configure environment
-   cp .env.example .env
-   # Add your GOOGLE_API_KEY to .env
-   ```
+## System Overview
 
-3. **Run the Assistant**:
-   ```bash
-   python main.py
-   ```
-   You will see the welcome menu:
-   ```text
-     ______              _       ______ _ _
-    |  ____|            | |     |  ____(_) |
-    | |__ _ __ ___  ___ | |__   | |__   _| |_
-    |  __| '__/ _ \/ __|| '_ \  |  __| | | __|
-    | |  | | |  __/\__ \| | | | | |    | | |_
-    |_|  |_|  \___||___/|_| |_| |_|    |_|\__|
+FreshFit is orchestrated by a Gemini router agent that chooses between two branches:
+1. **OutfitFlow** – the reasoning-heavy styling pipeline.
+2. **Cloth Registrar** – CRUD for wardrobe inventory (add/delete items).
 
-                Smart Wardrobe Assistant
-   ```
+Within OutfitFlow, weather enrichment and wardrobe filtering run in parallel, then a sequential chain (designer → preference ranking → explanation) produces the final response. Feedback ratings flow back into persistent history so the next run reflects your taste.
 
-## 🤖 Architecture
+## Agent Graph
 
-FreshFit uses a graph of specialized ADK agents:
-- **Router**: Directs traffic between "Outfit Flow" and "Wardrobe Management".
-- **Weather Agent**: Fetches live forecast data.
-- **Wardrobe Cataloger**: Filters your database for available, clean clothes.
-- **Outfit Designer**: Composes stylistically valid looks.
-- **Preference Ranking**: Re-ranks candidates based on your history.
-- **Explanation Agent**: Generates user-friendly rationales.
-- **Feedback Agent**: Captures ratings to close the learning loop.
+```mermaid
+graph TD
+    Router[Gemini Router]
+    Router -->|Styling| OutfitFlow
+    Router -->|CRUD| ClothRegistrar
 
-## 📄 License
-MIT
+    subgraph OutfitFlow
+        Weather --> ParallelJoin
+        WardrobeCataloger --> ParallelJoin
+        ParallelJoin --> OutfitDesigner --> PreferenceRanking --> Explanation
+        Explanation --> Feedback
+    end
+
+    subgraph ClothRegistrar
+        ClothRegistrar --> ClothAdder
+        ClothRegistrar --> ClothDeleter
+    end
+```
+
+## Documentation
+
+FreshFit ships with a MkDocs handbook in the `docs/` folder:
+- `docs/index.md` – project overview + quickstart
+- `docs/architecture.md` – deeper system diagrams and routing logic
+- `docs/agents.md` – agent specs, prompts, tools, schemas
+- `docs/prompts.md` – prompt templates, guardrails, retry policies
+- `docs/configuration.md` – environment variables, API keys, local data layout
+- `docs/PRD.md`, `docs/CLAUDE.md` – existing planning docs
+
+Run the site locally:
+
+```bash
+pip install mkdocs mkdocs-material
+mkdocs serve
+```
+
+## Contributing
+
+We welcome PRs! Read the [CONTRIBUTING.md](CONTRIBUTING.md) guide for environment setup, code style, and test commands before opening an issue or PR.
+
+## License
+
+[MIT](LICENSE)

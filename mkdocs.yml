@@ -1,0 +1,27 @@
+site_name: FreshFit Handbook
+site_description: "Architecture, agent specs, and prompts for FreshFit"
+repo_name: freshfit
+repo_url: https://github.com/yourusername/freshfit
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.tabs
+    - content.code.copy
+markdown_extensions:
+  - admonition
+  - toc:
+      permalink: "#"
+  - tables
+  - footnotes
+plugins:
+  - search
+nav:
+  - Home: index.md
+  - Architecture: architecture.md
+  - Agents: agents.md
+  - Prompts: prompts.md
+  - Configuration: configuration.md
+  - Product Spec (PRD): PRD.md
+  - Claude Notes: CLAUDE.md
+
