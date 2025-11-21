@@ -5,10 +5,9 @@ from typing import Any, Literal, Optional
 from google.adk.agents import Agent
 from google.adk.models.base_llm import BaseLlm
 from google.adk.models.google_llm import Gemini
+from google.adk.tools import google_search
 from google.genai import types
 from pydantic import BaseModel, Field, model_validator
-
-from google.adk.tools import google_search
 
 from agents.wardrobe_cataloger import WardrobeItem
 

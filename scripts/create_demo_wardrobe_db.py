@@ -7,7 +7,6 @@ import sqlite3
 from pathlib import Path
 from typing import Iterable
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DB_PATH = PROJECT_ROOT / "data" / "demo_wardrobe.db"
 DEMO_USER_ID = "123"

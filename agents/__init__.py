@@ -1,13 +1,13 @@
 """FreshFit agents"""
 
-from .weather_agent import weather_agent
+from .cloth_registrar import cloth_registrar_agent
 from .explanation_agent import explanation_agent
 from .feedback_learning import feedback_learning_agent
 from .metrics_agent import metrics_agent
 from .outfit_designer import outfit_designer_agent
 from .preference_ranking import preference_ranking_agent
 from .wardrobe_cataloger import wardrobe_cataloger_agent
-from .cloth_registrar import cloth_registrar_agent
+from .weather_agent import weather_agent
 
 __all__ = [
     "weather_agent",

@@ -5,12 +5,10 @@ from typing import Literal, Optional
 from google.adk.agents import Agent
 from google.adk.models.google_llm import Gemini
 from google.adk.tools import google_search
-
 from google.genai import types
 from pydantic import BaseModel, Field, field_validator
 
 from tools.date_tool import date_tool
-
 
 TEMP_BUCKETS = ("cold", "cool", "mild", "warm", "hot")
 
