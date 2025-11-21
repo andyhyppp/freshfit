@@ -7,7 +7,7 @@ name = "freshfit"
 version = "0.1.0"
 description = "Personal Outfit & Wardrobe Copilot powered by Gemini"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.10"
 dependencies = [
     "google-adk",
     "google-genai",
