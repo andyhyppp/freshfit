@@ -31,7 +31,7 @@ class FreshFitRouter(Agent):
 
 def create_freshfit_router() -> Agent:
     """Constructs the main FreshFit router agent with all sub-agents."""
-    
+
     # Instantiate leaf agents
     weather = weather_agent()
     wardrobe = wardrobe_cataloger_agent()
@@ -82,4 +82,3 @@ def create_freshfit_router() -> Agent:
     )
 
     return root_agent
-

@@ -4,8 +4,7 @@ from __future__ import annotations
 
 import sqlite3
 from pathlib import Path
-from typing import Any
-from typing import Optional
+from typing import Any, Optional
 
 from google.adk.tools.function_tool import FunctionTool
 
