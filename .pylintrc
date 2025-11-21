@@ -1,0 +1,22 @@
+[MASTER]
+ignore=venv,build,.git,__pycache__
+extension-pkg-whitelist=
+load-plugins=
+
+[MESSAGES CONTROL]
+disable=missing-docstring,invalid-name,too-few-public-methods,too-many-arguments,too-many-instance-attributes
+
+[REPORTS]
+output-format=colorized
+reports=no
+
+[FORMAT]
+max-line-length=100
+
+[SIMILARITIES]
+min-similarity-lines=4
+
+[TYPECHECK]
+ignored-modules=
+ignored-classes=
+
